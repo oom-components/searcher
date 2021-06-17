@@ -1,0 +1,28 @@
+{
+  "name": "@oom/searcher",
+  "version": "1.0.0",
+  "description": "Javascript to provide static searcher",
+  "files": [
+    "src/item.js",
+    "src/searcher.js"
+  ],
+  "scripts": {
+    "start": "http-server -c-1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oom-components/searcher.git"
+  },
+  "keywords": [
+    "progressive",
+    "web",
+    "component",
+    "searcher"
+  ],
+  "author": "Oscar Otero <oom@oscarotero.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/oom-components/searcher/issues"
+  },
+  "homepage": "https://github.com/oom-components/searcher#readme"
+}
