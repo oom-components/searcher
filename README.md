@@ -37,4 +37,4 @@ fetch("./data.json")
   });
 ```
 
-See the demo for styling examples.
+See the [demo](demo) for styling examples.
