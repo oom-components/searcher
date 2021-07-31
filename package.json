@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "description": "Javascript to provide static searcher",
   "files": [
-    "src/item.js",
-    "src/searcher.js"
+    "searcher.js"
   ],
   "scripts": {
-    "start": "http-server -c-1"
+    "start": "npx http-server -c-1"
   },
   "repository": {
     "type": "git",
