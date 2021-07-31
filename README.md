@@ -18,7 +18,7 @@ npm install @oom/searcher
 Let's start with the following html code:
 
 ```html
-<oom-searcher></oom-searcher>
+<search-form></search-form>
 ```
 
 ### JS
@@ -28,10 +28,13 @@ Use javascript for a complete experience:
 ```js
 import "./searcher.js";
 
+const searcher = document.querySelector("search-form");
+
 fetch("./data.json")
   .then((res) => res.json())
   .then((json) => {
-    const searcher = document.querySelector("oom-searcher");
     searcher.data = json;
   });
 ```
+
+See the demo for styling examples.

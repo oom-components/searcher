@@ -1,6 +1,83 @@
-import Item from "./item.js";
+export class Item extends HTMLElement {
+  constructor() {
+    super();
+    this.value = null;
+    const shadow = this.attachShadow({ mode: "open" });
+    shadow.innerHTML = `
+    <style>
+    :host(:not([hidden])) {
+      display: block;
+    }
+    button {
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
+      text-align: inherit;
+      border: none;
+      padding: 0;
+      background: none;
+    }
+    :host(.is-focused) {
+      background: gray;
+    }
+    </style>
+    <button type="button" part="item"><slot></slot></button>
+    `;
 
-export default class Searcher extends HTMLElement {
+    this.addEventListener("focus", () => this.focused = true);
+    this.addEventListener("mouseenter", () => this.focused = true);
+    this.addEventListener("click", () => this.select());
+    this.hidden = true;
+  }
+
+  query(query) {
+    this.hidden = !query || slugify(this.innerText).indexOf(query) === -1;
+  }
+
+  set hidden(value) {
+    super.hidden = value;
+
+    if (value) {
+      this.focused = false;
+      this.selected = false;
+    }
+  }
+
+  select() {
+    this.dispatchEvent(new CustomEvent("selected", { bubbles: true }));
+  }
+
+  set focused(enable) {
+    if (enable) {
+      const prev = this.searcher.focusedItem;
+
+      if (prev) {
+        prev.focused = false;
+      }
+      this.classList.add("is-focused");
+    } else {
+      this.classList.remove("is-focused");
+    }
+  }
+
+  get focused() {
+    return this.classList.contains("is-focused");
+  }
+
+  get searcher() {
+    return this.closest("search-form");
+  }
+
+  get value() {
+    return this.getAttribute("value");
+  }
+
+  set value(newValue) {
+    return this.setAttribute("value", newValue);
+  }
+}
+
+export class Searcher extends HTMLElement {
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: "open" });
@@ -18,12 +95,13 @@ export default class Searcher extends HTMLElement {
       box-shadow: 0 1px 4px #0003;
     }
     </style>
-    <input type="search" autocomplete="off">
-    <div>
+    <input type="search" autocomplete="off" part="input">
+    <div part="items">
       <slot></slot>
     </div>
     `;
     this.input = shadow.querySelector("input");
+    this.itemsContainer = shadow.querySelector("div");
 
     this.addEventListener("selected", (event) => {
       this.input.value = event.target.innerText;
@@ -57,11 +135,11 @@ export default class Searcher extends HTMLElement {
 
             if (matches[key + 1]) {
               matches[key + 1].focused = true;
-              scroll(matches[key + 1]);
+              scroll(this.itemsContainer, matches[key + 1]);
             }
           } else if (matches.length) {
             matches[0].focused = true;
-            scroll(matches[0]);
+            scroll(this.itemsContainer, matches[0]);
           }
           break;
         }
@@ -76,7 +154,7 @@ export default class Searcher extends HTMLElement {
 
             if (key > 0) {
               matches[key - 1].focused = true;
-              scroll(matches[key - 1]);
+              scroll(this.itemsContainer, matches[key - 1]);
             }
           }
           break;
@@ -115,6 +193,7 @@ export default class Searcher extends HTMLElement {
   }
 
   search(query) {
+    query = slugify(query);
     this.items.forEach((item) => item.query(query));
     if (!this.focusedItem) {
       const first = this.matchItems[0];
@@ -126,12 +205,13 @@ export default class Searcher extends HTMLElement {
   }
 }
 
+customElements.define("search-item", Item);
 customElements.define("search-form", Searcher);
 
-function scroll(item) {
+function scroll(parent, item) {
   let scroll;
 
-  const viewbox = item.parentElement.getBoundingClientRect();
+  const viewbox = parent.getBoundingClientRect();
   const rect = item.getBoundingClientRect();
 
   if (viewbox.top - rect.top > 0) {
@@ -149,4 +229,9 @@ function scroll(item) {
       item.scrollIntoView();
     }
   }
+}
+
+function slugify(text) {
+  return text.toLowerCase()
+    .replaceAll(/[^\w]+/g, "");
 }

@@ -1,8 +1,13 @@
-import "../src/searcher.js";
+import "../searcher.js";
+
+const searcher = document.querySelector("search-form");
 
 fetch("./data.json")
   .then((res) => res.json())
   .then((json) => {
-    const searcher = document.querySelector("search-form");
     searcher.data = json;
   });
+
+searcher.addEventListener("selected", (ev) => {
+  console.log(ev.target.value);
+});

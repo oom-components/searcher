@@ -1,0 +1,27 @@
+/* Style for the search-box container */
+search-form {
+  font-family: 'Open Sans', sans-serif;
+  background: #ebebeb;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+/* Styles for the input[type="search"] */
+search-form::part(input) {
+  appearance: textfield;
+  border: solid 4px red;
+}
+search-form::part(input):focus {
+  border-color: blue;
+}
+
+/* Styles for the list of items */
+search-form::part(items) {
+  max-height: 200px;
+  box-shadow: 0 0 10px #ccc;
+}
+
+/* Style for the individual items */
+search-item.is-focused {
+  background-color: pink;
+}
