@@ -1,83 +1,8 @@
-export class Item extends HTMLElement {
-  constructor() {
-    super();
-    this.value = null;
-    const shadow = this.attachShadow({ mode: "open" });
-    shadow.innerHTML = `
-    <style>
-    :host(:not([hidden])) {
-      display: block;
-    }
-    button {
-      display: block;
-      box-sizing: border-box;
-      width: 100%;
-      text-align: inherit;
-      border: none;
-      padding: 0;
-      background: none;
-    }
-    :host(.is-focused) {
-      background: gray;
-    }
-    </style>
-    <button type="button" part="item"><slot></slot></button>
-    `;
-
-    this.addEventListener("focus", () => this.focused = true);
-    this.addEventListener("mouseenter", () => this.focused = true);
-    this.addEventListener("click", () => this.select());
-    this.hidden = true;
+export default class Searcher extends HTMLElement {
+  static get observedAttributes() {
+    return ["url", "label", "placeholder"];
   }
 
-  query(query) {
-    this.hidden = !query || slugify(this.innerText).indexOf(query) === -1;
-  }
-
-  set hidden(value) {
-    super.hidden = value;
-
-    if (value) {
-      this.focused = false;
-      this.selected = false;
-    }
-  }
-
-  select() {
-    this.dispatchEvent(new CustomEvent("selected", { bubbles: true }));
-  }
-
-  set focused(enable) {
-    if (enable) {
-      const prev = this.searcher.focusedItem;
-
-      if (prev) {
-        prev.focused = false;
-      }
-      this.classList.add("is-focused");
-    } else {
-      this.classList.remove("is-focused");
-    }
-  }
-
-  get focused() {
-    return this.classList.contains("is-focused");
-  }
-
-  get searcher() {
-    return this.closest("search-form");
-  }
-
-  get value() {
-    return this.getAttribute("value");
-  }
-
-  set value(newValue) {
-    return this.setAttribute("value", newValue);
-  }
-}
-
-export class Searcher extends HTMLElement {
   constructor() {
     super();
     const shadow = this.attachShadow({ mode: "open" });
@@ -94,18 +19,42 @@ export class Searcher extends HTMLElement {
       max-height: 500px;
       box-shadow: 0 1px 4px #0003;
     }
+    button {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      font: inherit;
+      border: none;
+      padding: 0;
+      text-align: inherit;
+    }
+    button[hidden] {
+      display: none;
+    }
     </style>
-    <input type="search" autocomplete="off" part="input">
-    <div part="items">
-      <slot></slot>
-    </div>
+    <label>
+      <span part="label"></span>
+      <input type="search" autocomplete="off" part="input">
+    </label>
+
+    <div part="items" hidden></div>
     `;
     this.input = shadow.querySelector("input");
     this.itemsContainer = shadow.querySelector("div");
+    this.label = shadow.querySelector("label > span");
 
-    this.addEventListener("selected", (event) => {
+    this.itemsContainer.addEventListener("selected", (event) => {
       this.input.value = event.target.innerText;
-      this.matchItems.forEach((item) => item.hidden = true);
+      this.itemsContainer.hidden = true;
+
+      this.dispatchEvent(
+        new CustomEvent("selected", {
+          detail: {
+            label: event.target.innerHTML,
+            value: event.target.value,
+          },
+        }),
+      );
     });
   }
 
@@ -113,10 +62,17 @@ export class Searcher extends HTMLElement {
     this.innerHTML = "";
 
     for (const row of data) {
-      const item = new Item();
-      item.innerHTML = row.label;
-      item.setAttribute("value", row.value);
-      this.appendChild(item);
+      const btn = this.ownerDocument.createElement("button");
+      btn.innerHTML = row.label;
+      btn.value = row.value;
+      btn.setAttribute("part", "item");
+      btn.addEventListener("focus", () => this.activeItem = btn);
+      btn.addEventListener("mouseenter", () => this.activeItem = btn);
+      btn.addEventListener(
+        "click",
+        () => btn.dispatchEvent(new CustomEvent("selected", { bubbles: true })),
+      );
+      this.itemsContainer.appendChild(btn);
     }
   }
 
@@ -127,44 +83,47 @@ export class Searcher extends HTMLElement {
       switch (event.code) {
         case "ArrowDown": {
           event.preventDefault();
-          const focused = this.focusedItem;
-          const matches = Array.from(this.matchItems);
+          const item = this.activeItem;
+          const result = Array.from(this.resultItems);
 
-          if (focused) {
-            const key = matches.indexOf(focused);
+          if (item) {
+            const key = result.indexOf(item);
 
-            if (matches[key + 1]) {
-              matches[key + 1].focused = true;
-              scroll(this.itemsContainer, matches[key + 1]);
+            if (result[key + 1]) {
+              const activeItem = result[key + 1];
+              this.activeItem = activeItem;
+              scroll(this.itemsContainer, activeItem);
             }
-          } else if (matches.length) {
-            matches[0].focused = true;
-            scroll(this.itemsContainer, matches[0]);
+          } else if (result.length) {
+            const activeItem = result[0];
+            this.activeItem = activeItem;
+            scroll(this.itemsContainer, activeItem);
           }
           break;
         }
 
         case "ArrowUp": {
           event.preventDefault();
-          const focused = this.focusedItem;
+          const item = this.activeItem;
 
-          if (focused) {
-            const matches = Array.from(this.matchItems);
-            const key = matches.indexOf(focused);
+          if (item) {
+            const result = Array.from(this.resultItems);
+            const key = result.indexOf(item);
 
             if (key > 0) {
-              matches[key - 1].focused = true;
-              scroll(this.itemsContainer, matches[key - 1]);
+              const activeItem = result[key - 1];
+              this.activeItem = activeItem;
+              scroll(this.itemsContainer, activeItem);
             }
           }
           break;
         }
 
         case "Enter":
-          const focused = this.focusedItem;
+          const item = this.activeItem;
 
-          if (focused) {
-            focused.select();
+          if (item) {
+            item.click();
           }
           break;
 
@@ -176,37 +135,66 @@ export class Searcher extends HTMLElement {
     });
   }
 
+  attributeChangedCallback(name, oldValue, newValue) {
+    switch (name) {
+      case "url":
+        fetch(newValue)
+          .then((res) => res.json())
+          .then((json) => {
+            this.data = json;
+          });
+        break;
+      case "label":
+        this.label.innerHTML = newValue;
+        break;
+      case "placeholder":
+        this.input.setAttribute("placeholder", newValue);
+        break;
+    }
+  }
+
   get items() {
-    return this.querySelectorAll("search-item");
+    return this.itemsContainer.querySelectorAll(":scope > button");
   }
 
-  get focusedItem() {
-    return this.querySelector("search-item.is-focused");
+  get resultItems() {
+    return this.itemsContainer.querySelectorAll(
+      ":scope > button:not([hidden])",
+    );
   }
 
-  get selectedItem() {
-    return this.querySelector("search-item.is-selected");
+  get activeItem() {
+    return this.itemsContainer.querySelector(':scope > [part~="active"]');
   }
 
-  get matchItems() {
-    return this.querySelectorAll("search-item:not([hidden])");
+  set activeItem(item) {
+    const old = this.activeItem;
+    if (old) {
+      old.setAttribute("part", "item");
+    }
+    item.setAttribute("part", "item active");
   }
 
   search(query) {
     query = slugify(query);
-    this.items.forEach((item) => item.query(query));
-    if (!this.focusedItem) {
-      const first = this.matchItems[0];
 
-      if (first) {
-        first.focused = true;
+    this.items.forEach((item) => {
+      item.hidden = !query || slugify(item.innerText).indexOf(query) === -1;
+    });
+
+    if (!this.focusedItem) {
+      const activeItem = this.resultItems[0];
+
+      if (activeItem) {
+        this.activeItem = activeItem;
       }
     }
+
+    this.itemsContainer.hidden = !this.itemsContainer.querySelector(
+      ":scope > button:not([hidden])",
+    );
   }
 }
-
-customElements.define("search-item", Item);
-customElements.define("search-form", Searcher);
 
 function scroll(parent, item) {
   let scroll;

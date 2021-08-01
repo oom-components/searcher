@@ -1,5 +1,5 @@
 /* Style for the search-box container */
-search-form {
+oom-search {
   font-family: 'Open Sans', sans-serif;
   background: #ebebeb;
   padding: 5px;
@@ -7,21 +7,25 @@ search-form {
 }
 
 /* Styles for the input[type="search"] */
-search-form::part(input) {
+oom-search::part(input) {
   appearance: textfield;
   border: solid 4px red;
 }
-search-form::part(input):focus {
+oom-search::part(input):focus {
   border-color: blue;
 }
 
 /* Styles for the list of items */
-search-form::part(items) {
+oom-search::part(items) {
   max-height: 200px;
   box-shadow: 0 0 10px #ccc;
+  padding: 1em;
 }
 
 /* Style for the individual items */
-search-item.is-focused {
-  background-color: pink;
+oom-search::part(item) {
+  background: blue;
+}
+oom-search::part(active) {
+  background: red;
 }

@@ -1,13 +1,9 @@
-import "../searcher.js";
+import Searcher from "../searcher.js";
 
-const searcher = document.querySelector("search-form");
+customElements.define("oom-search", Searcher);
 
-fetch("./data.json")
-  .then((res) => res.json())
-  .then((json) => {
-    searcher.data = json;
-  });
+const searcher = document.querySelector("oom-search");
 
 searcher.addEventListener("selected", (ev) => {
-  console.log(ev.target.value);
+  console.log(ev.detail);
 });
