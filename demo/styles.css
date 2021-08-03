@@ -15,6 +15,11 @@ oom-search::part(input):focus {
   border-color: blue;
 }
 
+/* Styles for the label */
+oom-search::part(label) {
+  text-transform: uppercase;
+}
+
 /* Styles for the list of items */
 oom-search::part(items) {
   max-height: 200px;

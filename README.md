@@ -18,7 +18,7 @@ npm install @oom/searcher
 Let's start with the following html code:
 
 ```html
-<search-form></search-form>
+<oom-search label="Search" placeholder="Type to search" src="path/to/data.json"></oom-search>
 ```
 
 ### JS
@@ -26,15 +26,51 @@ Let's start with the following html code:
 Use javascript for a complete experience:
 
 ```js
-import "./searcher.js";
+import Searcher from "./searcher.js";
 
+// Register the component
+customElements.define("oom-search", Searcher);
+
+// Set a callback
 const searcher = document.querySelector("search-form");
 
-fetch("./data.json")
-  .then((res) => res.json())
-  .then((json) => {
-    searcher.data = json;
-  });
+searcher.addEventListener("selected", (ev) => {
+  const { value } = ev.detail;
+  window.location.href = value;
+});
+```
+
+### CSS
+
+This web component uses
+[::part](https://developer.mozilla.org/en-US/docs/Web/CSS/::part) for styling:
+
+```css
+/* Style for the search-box container */
+oom-search {
+}
+
+/* Styles for the input */
+oom-search::part(input) {
+}
+oom-search::part(input):focus {
+}
+
+/* Styles for the label */
+oom-search::part(label) {
+}
+
+/* Styles for the list of items */
+oom-search::part(items) {
+}
+
+/* Style for the individual items */
+oom-search::part(item) {
+}
+
+/* Style the active item */
+oom-search::part(active) {
+}
 ```
 
 See the [demo](demo) for styling examples.

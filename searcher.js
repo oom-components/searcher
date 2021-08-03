@@ -1,6 +1,6 @@
 export default class Searcher extends HTMLElement {
   static get observedAttributes() {
-    return ["url", "label", "placeholder"];
+    return ["src", "label", "placeholder"];
   }
 
   constructor() {
@@ -137,7 +137,11 @@ export default class Searcher extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     switch (name) {
-      case "url":
+      case "src":
+        if (!newValue) {
+          this.data = [];
+          break;
+        }
         fetch(newValue)
           .then((res) => res.json())
           .then((json) => {
