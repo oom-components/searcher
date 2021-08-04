@@ -21,6 +21,18 @@ Let's start with the following html code:
 <oom-search label="Search" placeholder="Type to search" src="path/to/data.json"></oom-search>
 ```
 
+The JSON must have the following structure:
+
+```json
+[
+  {
+    "value": "Returned value on select",
+    "label": "(optional) visible text of this option. If it's empty, the 'value' property will be used",
+    "search": "(optional) to include extra text to search (in addition to 'label')"
+  }
+]
+```
+
 ### JS
 
 Use javascript for a complete experience:
