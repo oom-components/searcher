@@ -28,4 +28,5 @@ project adheres to [Semantic Versioning](http://semver.org/).
 ## 1.0.0 - 2021-07-31
 First version
 
+[2.1.0]: https://github.com/oom-components/searcher/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/oom-components/searcher/compare/v1.0.0...v2.0.0
